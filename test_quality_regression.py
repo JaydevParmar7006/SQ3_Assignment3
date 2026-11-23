@@ -54,6 +54,34 @@ def test_missing_file_returns_client_error(client):
     assert b"File cannot be processed." in response.data
 
 
+def test_blank_filename_returns_client_error(client):
+    """Reject an unnamed upload even when its image bytes are valid."""
+    response = client.post(
+        "/prediction",
+        data={"file": (create_valid_image(), "")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+    assert b"File cannot be processed." in response.data
+
+
+def test_prediction_does_not_require_or_create_session(monkeypatch):
+    """An anonymous upload works without a prior visit or session cookie."""
+    monkeypatch.setattr(app_module, "predict_result", lambda _image: 0)
+    client = app_module.app.test_client(use_cookies=False)
+
+    response = client.post(
+        "/prediction",
+        data={"file": (create_valid_image(), "hand.jpg")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 200
+    assert b">0</h2>" in response.data
+    assert "Set-Cookie" not in response.headers
+
+
 def test_invalid_image_returns_client_error(client):
     """Verify that invalid image content is rejected."""
     invalid_image = BytesIO(b"fake_image_data")

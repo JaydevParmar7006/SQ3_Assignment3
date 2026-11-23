@@ -12,6 +12,7 @@ __pycache__/
 .pytest_cache/
 .pylint.d/
 .coverage
+/coverage.xml
 htmlcov/
 
 # Editor settings
